@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Tumkuru Ride — V9</title>
+<title>Tumkuru Ride — V10</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071016;font-family:system-ui,-apple-system,Segoe UI,sans-serif;touch-action:none}
 canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -28,8 +28,8 @@ button{border:0;border-radius:14px;padding:14px 20px;font-weight:900;font-size:1
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="loading"><div class="panel"><h2>BUILDING TUMKURU WORLD…</h2><p>Loading the bundled road network. No live Overpass request is required.</p></div></div>
-<div id="menu" style="display:none"><div class="panel">
+<div id="loading" style="display:none"></div>
+<div id="menu"><div class="panel">
 <h1>TUMKURU RIDE</h1><p><b>V8 • Bundled Road Network</b><br>Ride through a connected Tumakuru-style city route with junctions, traffic and collision physics.</p>
 <button id="start">START RIDE</button>
 <div class="small">Road names: B.H. Road • M.G. Road • Ashoka Road • Kariappa Road • Bengaluru–Honnavara Road</div>
@@ -68,174 +68,10 @@ const dist=document.getElementById('dist');
 const score=document.getElementById('score');
 const hp=document.getElementById('hp');
 const results=document.getElementById('results');
-window.addEventListener('error', (e)=>{
-  loading.style.display='flex';
-  loading.innerHTML='<div class="panel"><h2>GAME START ERROR</h2><p>'+String(e.message||'Unknown error')+'</p><p class="small">Refresh the page after updating index.html.</p></div>';
-});
-let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
-function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
-addEventListener('resize',resize);resize();
-
-const roads=[
- {name:"B.H. Road", pts:[[0,0],[220,0],[410,70],[570,190],[760,205]]},
- {name:"M.G. Road", pts:[[410,-330],[410,-80],[410,70],[420,280],[450,510]]},
- {name:"Ashoka Road", pts:[[120,-250],[260,-120],[410,70],[570,280],[720,390]]},
- {name:"Kariappa Road", pts:[[80,360],[250,250],[410,70],[600,-70],[780,-140]]},
- {name:"Bengaluru–Honnavara Road", pts:[[-360,-210],[-150,-100],[80,0],[220,0],[410,70]]}
-];
-const route=[
- [0,0],[220,0],[410,70],[410,180],[410,300],[450,510]
-];
-let state='menu',keys={},player,traffic=[],t=0,paused=false;
-const colors=['#e9eef0','#d8c7a8','#6ea3c9','#b74d43','#879c72','#f0b72d'];
-
-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function norm(x,y){let d=Math.hypot(x,y)||1;return [x/d,y/d]}
-function segInfo(p,a,b){
- let dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy;
- let u=clamp(((p.x-a[0])*dx+(p.y-a[1])*dy)/l2,0,1);
- let x=a[0]+dx*u,y=a[1]+dy*u;
- return {d:Math.hypot(p.x-x,p.y-y),x,y,u};
-}
-function roadAt(x,y){
- let best={d:9999};
- for(const r of roads) for(let i=0;i<r.pts.length-1;i++){
-   let s=segInfo({x,y},r.pts[i],r.pts[i+1]); if(s.d<best.d)best={...s,road:r,i};
+window.addEventListener('error',(e)=>{
+ const box=document.getElementById('menu');
+ if(box){
+  box.style.display='flex';
+  box.innerHTML='<div class="panel"><h2>GAME ERROR</h2><p>'+String(e.message||'Unknown JavaScript error')+'</p><p class="small">Please refresh this page once.</p></div>';
  }
- return best;
-}
-function routePos(){
- let q=route[player.ri], n=route[player.ri+1]||q;
- return Math.hypot(player.x-q[0],player.y-q[1]);
-}
-function makeTraffic(){
- traffic=[];
- for(let i=0;i<18;i++){
-  let ri=i%3, p=roads[ri].pts[(i*2)% (roads[ri].pts.length-1)];
-  let n=roads[ri].pts[Math.min((i*2)% (roads[ri].pts.length-1)+1,roads[ri].pts.length-1)];
-  let [dx,dy]=norm(n[0]-p[0],n[1]-p[1]);
-  traffic.push({x:p[0]+(i*31)%70,y:p[1]+(i*17)%60,dx,dy,v:45+((i*13)%35),c:colors[i%colors.length],kind:i%4===0?'bus':i%3===0?'auto':'car',road:ri});
- }
-}
-function reset(){
- player={x:0,y:-18,dx:1,dy:0,v:0,dist:0,score:0,hp:100,ri:0,boost:0,crashes:0,finished:false};
- makeTraffic();t=0;paused=false;mission.textContent='FOLLOW B.H. ROAD → M.G. ROAD';
-}
-function showToast(s){toast.textContent=s;toast.style.opacity=1;clearTimeout(showToast.x);showToast.x=setTimeout(()=>toast.style.opacity=0,900)}
-function startGame(){reset();state='game';menu.style.display='none';finish.style.display='none';loading.style.display='none'}
-function finishGame(){
- state='finish';finish.style.display='flex';
- results.innerHTML=`<p><b>${(player.dist/1000).toFixed(2)} km</b> route completed</p><p>Score: <b>${Math.round(player.score)}</b><br>Collisions: <b>${player.crashes}</b><br>Remaining condition: <b>${Math.max(0,Math.round(player.hp))}%</b></p>`;
-}
-start.onclick=startGame;again.onclick=startGame;
-pause.onclick=()=>{if(state==='game'){paused=!paused;pause.textContent=paused?'▶':'Ⅱ'}};
-
-function bind(id,prop){
- const el=document.getElementById(id);
- const on=e=>{e.preventDefault();keys[prop]=true;el.setPointerCapture?.(e.pointerId)};
- const off=e=>{e.preventDefault();keys[prop]=false};
- el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('pointerout',e=>{if(e.pointerType==='mouse')off(e)});
-}
-bind('left','left');bind('right','right');bind('gas','gas');bind('brake','brake');bind('horn','horn');
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')keys.gas=true});
-addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key===' ')keys.gas=false});
-
-function update(dt){
- if(state!=='game'||paused)return;
- const steer=(keys.left||keys.a?-1:0)+(keys.right||keys.d?1:0);
- const accelerating=keys.gas||keys.w||keys.arrowup;
- const braking=keys.brake||keys.s||keys.arrowdown;
- const target=accelerating?115:0;
- player.v += (target-player.v)*dt*(accelerating?1.5:.35);
- if(braking)player.v=Math.max(0,player.v-150*dt);
- player.v=clamp(player.v,0,130);
- let turn=steer*1.65*dt*(.35+player.v/130);
- let cs=Math.cos(turn),sn=Math.sin(turn);
- [player.dx,player.dy]=[player.dx*cs-player.dy*sn,player.dx*sn+player.dy*cs];
- let [nx,ny]=norm(player.dx,player.dy);player.dx=nx;player.dy=ny;
- player.x+=player.dx*player.v*dt;player.y+=player.dy*player.v*dt;
- player.dist+=player.v*dt;
- let r=roadAt(player.x,player.y);
- if(r.d>42){player.v*=.94;player.hp-=5*dt;if(r.d>62)player.hp-=12*dt}
- // Traffic movement and collisions
- for(const a of traffic){
-   a.x+=a.dx*a.v*dt;a.y+=a.dy*a.v*dt;
-   if(a.x<-430||a.x>850||a.y<-390||a.y>570){a.x=roads[a.road].pts[0][0];a.y=roads[a.road].pts[0][1]}
-   const d=Math.hypot(a.x-player.x,a.y-player.y);
-   if(d<22){player.hp-=28;player.v*=.35;player.score-=250;player.crashes++;a.x+=a.dx*35;a.y+=a.dy*35;showToast('COLLISION − DAMAGE')}
- }
- player.score+=player.v*dt*.55;
- // progress through route checkpoints
- let q=route[player.ri+1];
- if(q && Math.hypot(player.x-q[0],player.y-q[1])<45){
-   player.ri++;player.score+=500;
-   const names=['B.H. ROAD','CENTRAL JUNCTION','M.G. ROAD','ASHOKA SIDE','FINISH'];
-   mission.textContent=player.ri>=route.length-1?'REACH THE FINISH':`CHECKPOINT ${player.ri+1} • ${names[Math.min(player.ri,names.length-1)]}`;
-   showToast('CHECKPOINT +500');
- }
- if(player.ri>=route.length-1 && Math.hypot(player.x-route[route.length-1][0],player.y-route[route.length-1][1])<55){finishGame();return}
- if(player.hp<=0){showToast('BIKE DISABLED');finishGame()}
- spd.textContent=Math.round(player.v);dist.textContent=(player.dist/1000).toFixed(1);score.textContent=Math.round(player.score);hp.textContent=Math.max(0,Math.round(player.hp));
-}
-
-function project(x,y){
- // camera follows player, rotate world so forward is up
- let rx=x-player.x,ry=y-player.y;
- let ang=Math.atan2(player.dx,player.dy);
- let X=rx*Math.cos(ang)-ry*Math.sin(ang);
- let Y=rx*Math.sin(ang)+ry*Math.cos(ang);
- return [W/2+X*1.35,H*.69-Y*1.35];
-}
-function drawRoad(r){
- ctx.lineWidth=70;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#333a3e';ctx.beginPath();
- r.pts.forEach((p,i)=>{let q=project(p[0],p[1]);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.stroke();
- ctx.lineWidth=2;ctx.strokeStyle='#f3d76a';ctx.setLineDash([14,16]);ctx.beginPath();
- r.pts.forEach((p,i)=>{let q=project(p[0],p[1]);i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.stroke();ctx.setLineDash([]);
-}
-function drawBuilding(x,y,w,h){
- let q=project(x,y);let d=Math.max(.25,1-Math.hypot(x-player.x,y-player.y)/1000),ww=w*d,hh=h*d;
- ctx.fillStyle='#8c8175';ctx.fillRect(q[0]-ww/2,q[1]-hh,ww,hh);
- ctx.fillStyle='#b8a894';ctx.fillRect(q[0]-ww/2,q[1]-hh,ww,hh*.12);
- ctx.fillStyle='#394b53';for(let i=0;i<3;i++)ctx.fillRect(q[0]-ww*.35+i*ww*.25,q[1]-hh*.65,ww*.1,hh*.14);
-}
-function drawVehicle(a,isPlayer=false){
- let q=project(a.x,a.y),s=isPlayer?1.15:Math.max(.45,1-Math.hypot(a.x-player.x,a.y-player.y)/650);
- ctx.save();ctx.translate(q[0],q[1]);
- if(!isPlayer){ctx.rotate(Math.atan2(a.dy,a.dx)-Math.atan2(player.dx,player.dy));}
- ctx.fillStyle=isPlayer?'#c9ff28':a.c;ctx.beginPath();ctx.roundRect(-11*s,-22*s,22*s,44*s,5*s);ctx.fill();
- ctx.fillStyle='#17242a';ctx.fillRect(-7*s,-9*s,14*s,12*s);
- ctx.fillStyle='#111';ctx.fillRect(-12*s,-16*s,4*s,10*s);ctx.fillRect(8*s,-16*s,4*s,10*s);ctx.fillRect(-12*s,8*s,4*s,10*s);ctx.fillRect(8*s,8*s,4*s,10*s);
- if(isPlayer){ctx.fillStyle='#fff';ctx.fillRect(-6,12,12,3)}
- ctx.restore();
-}
-function minimap(){
- const x=14,y=H-150,w=112,h=112;ctx.save();ctx.globalAlpha=.9;ctx.fillStyle='#071016dd';ctx.fillRect(x,y,w,h);
- const sx=.12,sy=.12;
- for(const r of roads){ctx.strokeStyle='#68757b';ctx.lineWidth=2;ctx.beginPath();r.pts.forEach((p,i)=>{let X=x+w/2+p[0]*sx,Y=y+h/2+p[1]*sy;i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke()}
- ctx.fillStyle='#c9ff28';ctx.beginPath();ctx.arc(x+w/2+player.x*sx,y+h/2+player.y*sy,4,0,7);ctx.fill();ctx.restore();
-}
-function draw(){
- ctx.clearRect(0,0,W,H);
- let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#8bb8c8');g.addColorStop(.45,'#c6d3b6');g.addColorStop(1,'#59634d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
- // distant skyline
- for(let i=0;i<18;i++){let x=i*90-(player.x%90);let hh=20+(i%5)*13;ctx.fillStyle='#68736e';ctx.fillRect(x,H*.35-hh,65,hh)}
- for(const r of roads)drawRoad(r);
- // roadside blocks/trees
- for(let i=-6;i<20;i++){let x=i*90,y=80+((i*71)%380);drawBuilding(x,y,48,60+((i*17)%50))}
- for(const a of traffic)drawVehicle(a);
- drawVehicle(player,true);
- // finish marker
- let f=project(route[route.length-1][0],route[route.length-1][1]);ctx.fillStyle='#c9ff28';ctx.font='900 12px system-ui';ctx.fillText('FINISH',f[0]-20,f[1]-25);
- minimap();
- if(paused){ctx.fillStyle='#07101688';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='900 28px system-ui';ctx.textAlign='center';ctx.fillText('PAUSED',W/2,H/2);ctx.textAlign='left')}
-}
-let last=performance.now();
-function loop(now){let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
-reset();
-loading.style.display='none';
-menu.style.display='flex';
-requestAnimationFrame(loop);
-})();
-</script>
-</body>
-</html>
+});>
