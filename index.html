@@ -3,165 +3,228 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Tumkuru Ride — Mobile Game World</title>
+<title>Tumkuru Ride — Real OSM 3D Slice</title>
 <style>
-*{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
-html,body,button,#startBtn,#gas,#brake,#horn,#pause,#joy{touch-action:manipulation}
-button,#startBtn,#gas,#brake,#horn,#pause,#joy{-webkit-user-select:none;user-select:none}
-
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101820;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
-#c{position:fixed;inset:0;width:100%;height:100%;display:block}
-#hud{position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none;color:#fff;text-shadow:0 2px 4px #000}
-.box{background:#071017c9;border:1px solid #ffffff20;border-radius:13px;padding:8px 11px;backdrop-filter:blur(7px)}
-.big{font-size:23px;font-weight:850}.tiny{font-size:10px;opacity:.72;letter-spacing:.1em}
-#roadName{max-width:240px;text-align:right;font-size:13px}
-#status{position:fixed;left:50%;top:12px;transform:translateX(-50%);padding:6px 10px;border-radius:999px;background:#071017c9;color:#fff;font-size:11px;border:1px solid #fff2;pointer-events:none}
-#controls{position:fixed;inset:0;pointer-events:none}
-#joy{position:absolute;left:18px;bottom:max(20px,env(safe-area-inset-bottom));width:145px;height:145px;border-radius:50%;background:#ffffff12;border:2px solid #ffffff22;pointer-events:auto;touch-action:none}
-#joy:after{content:"";position:absolute;inset:15px;border:1px dashed #ffffff25;border-radius:50%}
-#knob{position:absolute;left:50%;top:50%;width:68px;height:68px;margin:-34px;border-radius:50%;background:#ffffff30;border:2px solid #ffffff55;box-shadow:0 8px 20px #0008}
-.pedal{position:absolute;right:18px;width:108px;height:92px;border-radius:25px;color:#fff;font-weight:900;font-size:17px;border:1px solid #ffffff35;pointer-events:auto;touch-action:none;box-shadow:0 8px 22px #0009}
-#gas{bottom:max(24px,env(safe-area-inset-bottom));background:linear-gradient(#1caa68,#0b5e3c)}
-#brake{bottom:128px;background:linear-gradient(#c74747,#6b2222)}
-#horn{position:absolute;right:140px;bottom:max(30px,env(safe-area-inset-bottom));width:62px;height:62px;border-radius:20px;background:#111a;color:#fff;border:1px solid #fff3;font-size:22px;pointer-events:auto;touch-action:none}
-#pause{position:fixed;right:12px;top:64px;border:1px solid #fff2;background:#071017c9;color:#fff;border-radius:10px;padding:8px 11px;font-size:11px;pointer-events:auto}
-#start{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:radial-gradient(circle at 50% 20%,#29485c,#071017 67%);padding:18px}
-.panel{width:min(520px,92vw);padding:25px;border-radius:25px;background:#071017ed;border:1px solid #fff2;box-shadow:0 30px 90px #000b;color:#fff}
-.panel h1{font-size:34px;margin:0 0 4px}.sub{font-size:11px;letter-spacing:.13em;opacity:.68}.panel p{line-height:1.5;color:#c8cdd1}
-#startBtn{width:100%;height:58px;border:0;border-radius:15px;background:#e9b84c;color:#111;font-size:17px;font-weight:900;touch-action:manipulation}
-#loading{font-size:11px;color:#8fd6ff;margin-top:12px;min-height:15px}
-#map{position:fixed;right:12px;top:105px;width:132px;height:132px;border-radius:12px;border:1px solid #fff2;background:#071017dd;pointer-events:none}
-#help{position:fixed;left:50%;bottom:9px;transform:translateX(-50%);color:#fff9;font-size:10px;background:#071017b5;padding:5px 8px;border-radius:8px;pointer-events:none}
-@media (orientation:portrait){#start:after{content:"Landscape is recommended for driving";position:absolute;bottom:10px;color:#fff8;font-size:11px}}
+html,body{margin:0;height:100%;overflow:hidden;background:#b9c7c7;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+canvas{display:block}
+#ui{position:fixed;inset:0;pointer-events:none;color:#fff}
+.box{background:#071820d9;border:1px solid #ffffff25;border-radius:14px;backdrop-filter:blur(8px)}
+#top{position:absolute;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;gap:8px}
+#title{padding:9px 12px}.brand{font-weight:950;font-size:16px}.brand i{color:#d8ff3f;font-style:normal}
+.stat{padding:7px 10px;min-width:74px}.lab{font-size:9px;letter-spacing:1.2px;opacity:.65}.val{font-size:20px;font-weight:900}
+#road{position:absolute;left:12px;top:78px;padding:9px 13px;border-left:4px solid #d8ff3f;max-width:340px}.roadname{font-weight:900}.roadsub{font-size:11px;opacity:.72;margin-top:2px}
+#status{position:absolute;right:12px;top:78px;padding:8px 11px;font-size:11px;max-width:190px;text-align:right}
+#controls{position:absolute;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom));height:155px}
+button{pointer-events:auto;touch-action:none;border:1px solid #ffffff30;color:#fff;background:#09212bd9;box-shadow:0 8px 22px #0005;border-radius:20px;font-weight:900}
+#l,#r{position:absolute;bottom:10px;width:82px;height:82px;font-size:36px}#l{left:16px}#r{left:108px}
+#brake,#boost{position:absolute;right:16px;width:94px;height:66px}#brake{bottom:10px;background:#7b2625dd}#boost{bottom:84px;color:#d8ff3f;background:#385b16dd}
+#horn{position:absolute;right:124px;bottom:84px;width:70px;height:58px}#swing{position:absolute;right:124px;bottom:14px;width:70px;height:58px}
+#pause{position:absolute;right:16px;top:14px;width:44px;height:44px;border-radius:12px}
+#start{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 55% 20%,#52737c,#071218 68%);color:#fff}
+.panel{width:min(92vw,500px);padding:28px;border-radius:25px;background:#07151bf5;border:1px solid #ffffff20;box-shadow:0 30px 90px #000b}
+.k{font-size:10px;letter-spacing:3px;opacity:.65}.panel h1{font-size:48px;line-height:.9;margin:8px 0 14px}.panel h1 span{color:#d8ff3f}.panel p{line-height:1.55;color:#c6d2d6;font-size:14px}.panel button{width:100%;padding:17px;background:#d8ff3f;color:#071218;border:0;border-radius:15px;font-size:17px;margin-top:8px}.note{font-size:10px;color:#8ea2aa;margin-top:12px}
+#loading{position:fixed;z-index:60;inset:0;display:flex;align-items:center;justify-content:center;background:#071218;color:#d8ff3f;font-weight:900;letter-spacing:1px}
+#toast{position:fixed;z-index:40;left:50%;top:54%;transform:translate(-50%,-50%);display:none;background:#071820eF;border:1px solid #ffffff25;padding:12px 18px;border-radius:14px;font-weight:900}
+#crash{position:fixed;inset:0;z-index:35;display:none;background:#ff2a1928;pointer-events:none}
+@media(orientation:portrait){#status{display:none}.panel h1{font-size:38px}}
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<canvas id="map" width="264" height="264"></canvas>
-<div id="hud">
-  <div class="box"><div class="tiny">TUMKURU RIDE</div><span id="speed" class="big">0</span> km/h</div>
-  <div class="box" id="roadName"><div class="tiny">CURRENT AREA</div><span id="road">Central Tumakuru</span><br><span id="distance">0.00 km</span></div>
+<div id="loading">LOADING TUMKURU ROAD DATA…</div>
+<div id="ui">
+ <div id="top">
+  <div id="title" class="box"><div class="brand"><i>//</i> TUMKURU RIDE</div></div>
+  <div class="stat box"><div class="lab">SPEED</div><div class="val"><span id="spd">0</span> <small>KM/H</small></div></div>
+  <div class="stat box"><div class="lab">DISTANCE</div><div class="val"><span id="dst">0.00</span><small> KM</small></div></div>
+  <div class="stat box"><div class="lab">DAMAGE</div><div class="val"><span id="dmg">100</span>%</div></div>
+ </div>
+ <div id="road" class="box"><div class="roadname" id="rn">Finding a Tumakuru road…</div><div class="roadsub" id="rs">OpenStreetMap road geometry</div></div>
+ <div id="status" class="box">OSM CITY SLICE<br><span id="st">Preparing world</span></div>
+ <div id="controls">
+  <button id="pause">Ⅱ</button><button id="l">‹</button><button id="r">›</button>
+  <button id="horn">HORN</button><button id="swing">SWING</button>
+  <button id="brake">BRAKE</button><button id="boost">BOOST ↑↑</button>
+ </div>
 </div>
-<div id="status">READY</div>
-<button id="pause">PAUSE</button>
-<div id="controls">
-  <div id="joy"><div id="knob"></div></div>
-  <button class="pedal" id="brake">BRAKE</button>
-  <button class="pedal" id="gas">GAS</button>
-  <button id="horn">📣</button>
-</div>
-<div id="help">LEFT: STEER • RIGHT: GAS / BRAKE • HOLD</div>
-<div id="localWarning" style="display:none;position:fixed;top:12px;left:12px;right:12px;z-index:9999;padding:12px 14px;border-radius:12px;background:#3b1600;color:#fff;font:600 14px/1.35 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center">You are viewing the HTML as a local file. Upload this <b>index.html</b> to GitHub Pages and open the HTTPS game link in Safari for the real game.</div>
-<div id="start">
-  <div class="panel">
-    <h1>TUMKURU RIDE</h1>
-    <div class="sub">MOBILE GAME-WORLD BUILD</div>
-    <p>Self-contained perspective driving world. No Three.js/CDN dependency is required to start the game, so the local iPhone test can run reliably.</p>
-    <button id="startBtn" type="button" onclick="window.__startTumkuruRide && window.__startTumkuruRide(event)">START RIDE</button>
-    <div id="loading">Renderer ready.</div>
-  </div>
-</div>
+<div id="toast"></div><div id="crash"></div>
+<div id="start"><div class="panel">
+ <div class="k">OPENSTREETMAP • TUMAKURU • 3D VERTICAL SLICE</div>
+ <h1>RIDE THE <span>REAL</span><br>ROAD.</h1>
+ <p>This build loads real Tumakuru road geometry from OpenStreetMap and turns a mapped road corridor into a playable 3D riding section. Traffic, collision, route progress and mobile controls run on top of that geometry.</p>
+ <button id="go">START TUMKURU RIDE</button>
+ <div class="note">© OpenStreetMap contributors. Map data © OpenStreetMap contributors, available under ODbL. Internet connection required for the first world load.</div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.min.js"></script>
 <script>
-(function(){
+(async()=>{
 "use strict";
-if(location.protocol==="file:"){
- var w=document.getElementById("localWarning");
- if(w)w.style.display="block";
-}
-var canvas=document.getElementById("c"),ctx=canvas.getContext("2d",{alpha:false});
-var map=document.getElementById("map"),mx=map.getContext("2d");
-var start=document.getElementById("start"),btn=document.getElementById("startBtn"),load=document.getElementById("loading");
-var running=false,paused=false,last=0,speed=0,dist=0,steer=0,gas=false,brake=false,night=false;
-var W=0,H=0,DPR=1,playerX=0,playerLane=0,roadOffset=0,seed=19;
-function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
-function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+"px";canvas.style.height=H+"px";ctx.setTransform(DPR,0,0,DPR,0,0)}
-addEventListener("resize",resize);resize();
-
-/* Major Tumakuru corridors represented as world lanes; final OSM extract plugs into the same renderer. */
-var roads=[
- {name:"B.H. Road",x:0},
- {name:"M.G. Road",x:-.35},
- {name:"Railway Station Road",x:.25},
- {name:"Ashoka Road",x:-.55},
- {name:"Vivekananda Road",x:.55},
- {name:"Kothitopu Road",x:-.15},
- {name:"Cariappa Road",x:.78},
- {name:"Batawadi Road",x:-.82}
+const $=id=>document.getElementById(id);
+const bbox={s:13.325,w:77.08,n:13.355,e:77.12};
+const endpoints=[
+ "https://overpass-api.de/api/interpreter",
+ "https://overpass.kumi.systems/api/interpreter",
+ "https://overpass.private.coffee/api/interpreter"
 ];
-var traffic=[];
-for(var i=0;i<18;i++)traffic.push({lane:(rnd()*1.7-.85),z:rnd()*1,spd:.25+rnd()*.45,type:i%9===0?"bus":i%7===0?"auto":i%4===0?"bike":"car"});
-var buildings=[];
-for(var j=0;j<75;j++)buildings.push({side:rnd()<.5?-1:1,z:rnd()*1,h:.35+rnd()*.9,w:.04+rnd()*.1,col:["#b99b7c","#a8b0b3","#d1c2a4","#8e9aa0","#b97957"][j%5]});
+const query=`[out:json][timeout:35];(way[highway][highway!~"footway|path|cycleway|steps|pedestrian|service|track|construction|bridleway"](${bbox.s},${bbox.w},${bbox.n},${bbox.e});way[building](${bbox.s},${bbox.w},${bbox.n},${bbox.e}););out tags geom;`;
 
-function startGame(e){
- if(e){try{e.preventDefault()}catch(_){}}
- if(running)return;
- running=true;paused=false;start.style.display="none";load.textContent="Game running";
- document.getElementById("status").textContent="RIDING";
- last=performance.now();
- drawWorld();drawMap();
- requestAnimationFrame(loop);
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function getOSM(){
+ for(const ep of endpoints){
+  try{
+   const u=ep+"?data="+encodeURIComponent(query);
+   const r=await fetch(u,{mode:"cors"});
+   if(r.ok){const j=await r.json();if(j.elements?.length)return j}
+  }catch(e){}
+  await sleep(200)
+ }
+ throw new Error("OSM service unavailable");
 }
-function safeStart(e){
- if(e){try{e.preventDefault()}catch(_){} try{e.stopPropagation()}catch(_){}}
- startGame(e);
+function geoDist(a,b){
+ const R=6371000,lat=(a.lat+b.lat)*Math.PI/360, dlat=(b.lat-a.lat)*Math.PI/180,dlon=(b.lon-a.lon)*Math.PI/180;
+ const x=dlon*Math.cos(lat),y=dlat;return Math.sqrt(x*x+y*y)*R
 }
-window.__startTumkuruRide=safeStart;
-btn.addEventListener("click",safeStart,false);
-btn.addEventListener("touchend",safeStart,{passive:false});
-btn.addEventListener("pointerup",safeStart,{passive:false});
-/* Keyboard fallback */
-var keys={};addEventListener("keydown",function(e){keys[e.key.toLowerCase()]=true;if(e.key==="Enter"&&!running)startGame(e)});addEventListener("keyup",function(e){keys[e.key.toLowerCase()]=false});
-document.getElementById("pause").addEventListener("click",function(){paused=!paused;this.textContent=paused?"RESUME":"PAUSE"});
-
-function bindHold(id,setter){var el=document.getElementById(id);el.addEventListener("pointerdown",function(e){e.preventDefault();el.setPointerCapture(e.pointerId);setter(true)});["pointerup","pointercancel","lostpointercapture"].forEach(function(t){el.addEventListener(t,function(){setter(false)})})}
-bindHold("gas",function(v){gas=v});bindHold("brake",function(v){brake=v});
-document.getElementById("horn").addEventListener("pointerdown",function(e){e.preventDefault();if(navigator.vibrate)navigator.vibrate(25);document.getElementById("status").textContent="HONK!" ;setTimeout(function(){if(running)document.getElementById("status").textContent="RIDING"},350)});
-
-var joy=document.getElementById("joy"),knob=document.getElementById("knob"),joyId=null;
-function joyMove(e){var r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),lim=r.width*.38;if(Math.abs(dx)>lim)dx=dx<0?-lim:lim;steer=dx/lim;knob.style.transform="translate("+dx+"px,0)"}
-joy.addEventListener("pointerdown",function(e){e.preventDefault();joyId=e.pointerId;joy.setPointerCapture(joyId);joyMove(e)});
-joy.addEventListener("pointermove",function(e){if(e.pointerId===joyId)joyMove(e)});
-function joyEnd(){joyId=null;steer=0;knob.style.transform="translate(0,0)"}
-joy.addEventListener("pointerup",joyEnd);joy.addEventListener("pointercancel",joyEnd);joy.addEventListener("lostpointercapture",joyEnd);
-
-function roadAt(){var idx=Math.floor((Math.sin(dist*.33)+1)*.5*roads.length)%roads.length;return roads[idx].name}
-function poly(points,fill){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(var i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fillStyle=fill;ctx.fill()}
-function drawWorld(){
- var horizon=H*.40, bottom=H, center=W*.5+playerX*90;
- ctx.fillStyle=night?"#101a2a":"#7ea8c2";ctx.fillRect(0,0,W,horizon);
- ctx.fillStyle=night?"#1c2630":"#6d765c";ctx.fillRect(0,horizon,W,H-horizon);
- /* distant city */
- for(var i=0;i<24;i++){var x=i*W/23,hh=18+(i%6)*10;ctx.fillStyle=night?"#202832":"#879091";ctx.fillRect(x,horizon-hh, W/30,hh)}
- /* perspective road */
- var roadBottom=W*.42, roadTop=W*.055;
- var curve=steer*80;
- poly([[center-roadBottom,horizon],[center+roadBottom,horizon],[center+roadBottom*.55,bottom],[center-roadBottom*.55,bottom]],night?"#292d31":"#303336");
- /* shoulders */
- poly([[center-roadBottom,horizon],[center-roadBottom*.92,horizon],[center-roadBottom*.5,bottom],[center-roadBottom*.55,bottom]],night?"#55564f":"#77786f");
- poly([[center+roadBottom*.92,horizon],[center+roadBottom,horizon],[center+roadBottom*.55,bottom],[center+roadBottom*.5,bottom]],night?"#55564f":"#77786f");
- /* lane divider */
- ctx.strokeStyle=night?"#d7c96e":"#e9df91";ctx.lineWidth=3;ctx.setLineDash([28,25]);ctx.beginPath();ctx.moveTo(center,horizon);ctx.lineTo(center+curve,bottom);ctx.stroke();ctx.setLineDash([]);
- /* roadside buildings */
- buildings.forEach(function(b){var y=horizon+(1-b.z)*(bottom-horizon),scale=.35+(1-b.z)*1.9,x=center+b.side*(roadBottom+(1-b.z)*W*.28);var bw=b.w*W*scale,bh=b.h*H*.28*scale;ctx.fillStyle=b.col;ctx.fillRect(x-(b.side<0?bw:0),y-bh,bw,bh);if(b.z<.65){ctx.fillStyle=night?"#d7b75c":"#6c7e84";for(var q=0;q<3;q++)ctx.fillRect(x+(b.side<0?q*bw/3:-q*bw/3),y-bh*.65,bw*.14,bh*.13)}})
- /* road markings */
- for(var m=0;m<7;m++){var p=m/7,yy=horizon+p*(bottom-horizon),len=5+p*22,xx=center+curve*p;ctx.fillStyle="#eee6a1";ctx.fillRect(xx-len/2,yy,len,Math.max(2,p*5))}
- /* traffic */
- traffic.forEach(function(t){t.z+=t.spd*(speed/90+.25)*.004;if(t.z>1.1)t.z=-.1;var p=t.z,y=horizon+p*(bottom-horizon),sc=.25+p*1.65,x=center+t.lane*(roadBottom*.65)*p+curve*p;var bw=(t.type==="bus"?34:t.type==="auto"?23:t.type==="bike"?13:25)*sc,bh=(t.type==="bus"?45:t.type==="bike"?26:31)*sc;ctx.fillStyle=t.type==="bus"?"#315d7a":t.type==="auto"?"#1c8c55":t.type==="bike"?"#9b3434":"#697177";ctx.fillRect(x-bw/2,y-bh,bw,bh);if(t.type!=="bike"){ctx.fillStyle="#182126";ctx.fillRect(x-bw*.35,y-bh*.65,bw*.7,bh*.24)}})
- /* player bike */
- var px=center+steer*75,py=H*.78;ctx.save();ctx.translate(px,py);ctx.fillStyle="#111";ctx.beginPath();ctx.ellipse(0,22,22,8,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#24282b";ctx.fillRect(-12,-15,24,42);ctx.fillStyle="#d6a23c";ctx.fillRect(-7,-28,14,14);ctx.fillStyle="#eee";ctx.fillRect(-4,-34,8,5);ctx.restore();
- if(night){ctx.fillStyle="rgba(255,239,160,.13)";ctx.beginPath();ctx.moveTo(center+steer*75-8,py-30);ctx.lineTo(center+steer*75-150,py-230);ctx.lineTo(center+steer*75+150,py-230);ctx.lineTo(center+steer*75+8,py-30);ctx.fill()}
+function project(p){
+ const lat0=13.3401,lon0=77.1006;
+ return {x:(p.lon-lon0)*111320*Math.cos(lat0*Math.PI/180),z:-(p.lat-lat0)*110540}
 }
-function drawMap(){mx.clearRect(0,0,264,264);mx.fillStyle="#101820";mx.fillRect(0,0,264,264);mx.strokeStyle="#70787e";mx.lineWidth=3;var paths=[[[20,210],[75,175],[125,130],[210,60]],[[60,20],[80,75],[125,130],[155,230]],[[15,115],[85,125],[125,130],[240,145]],[[205,230],[175,175],[125,130],[40,45]]];paths.forEach(function(p){mx.beginPath();p.forEach(function(a,k){k?mx.lineTo(a[0],a[1]):mx.moveTo(a[0],a[1])});mx.stroke()});mx.fillStyle="#e9b84c";mx.beginPath();mx.arc(132+steer*35,132,6,0,7);mx.fill()}
-function loop(now){if(!running)return;var dt=Math.min(.035,(now-last)/1000);last=now;if(!paused){
- var s=steer+(keys.a||keys.arrowleft?-1:0)+(keys.d||keys.arrowright?1:0);var g=gas||keys.w||keys.arrowup,b=brake||keys.s||keys.arrowdown;
- var a=g?30:0;var dec=b?38:6;speed=Math.max(0,Math.min(105,speed+(a-dec)*dt));if(speed>2){dist+=speed*dt/3600;playerX+=(s*speed*dt*.012);playerX*=.99}
- document.getElementById("speed").textContent=Math.round(speed);document.getElementById("distance").textContent=dist.toFixed(2)+" km";document.getElementById("road").textContent=roadAt();document.getElementById("status").textContent="RIDING";
- drawWorld();drawMap();
- }requestAnimationFrame(loop)}
-/* Start a lightweight render immediately after a successful tap even if external resources are unavailable. */
-drawWorld();drawMap();
+function lineLen(g){let n=0;for(let i=1;i<g.length;i++)n+=geoDist(g[i-1],g[i]);return n}
+function simplify(g){
+ if(g.length<20)return g;
+ const out=[g[0]],step=Math.max(1,Math.floor(g.length/90));
+ for(let i=step;i<g.length-1;i+=step)out.push(g[i]);
+ out.push(g[g.length-1]);return out
+}
+function makeRoad(points,width,color){
+ const pts=points.map(project), verts=[],inds=[];
+ for(let i=0;i<pts.length;i++){
+  const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];
+  let dx=b.x-a.x,dz=b.z-a.z,L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
+  const nx=-dz,nz=dx,w=width/2;
+  verts.push(a.x+nx*w,0,a.z+nz*w,a.x-nx*w,0,a.z-nz*w);
+  if(i<pts.length-1){let k=i*2;inds.push(k,k+1,k+2,k+1,k+3,k+2)}
+ }
+ const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(verts,3));g.setIndex(inds);g.computeVertexNormals();
+ const m=new THREE.MeshStandardMaterial({color,roughness:.95});
+ const mesh=new THREE.Mesh(g,m);mesh.userData.points=pts;return mesh
+}
+function makeLine(points,width,color){
+ const pts=points.map(project),g=new THREE.BufferGeometry().setFromPoints(pts.map(p=>new THREE.Vector3(p.x,.08,p.z)));
+ return new THREE.Line(g,new THREE.LineBasicMaterial({color,transparent:true,opacity:.9}));
+}
+function box(x,z,w,d,h,c){
+ const g=new THREE.BoxGeometry(w,h,d),m=new THREE.MeshStandardMaterial({color:c,roughness:.9});
+ const o=new THREE.Mesh(g,m);o.position.set(x,h/2,z);return o
+}
+function tree(x,z,s){
+ const g=new THREE.Group(),tr=new THREE.Mesh(new THREE.CylinderGeometry(.25,.35,2.8,6),new THREE.MeshStandardMaterial({color:0x604633}));
+ tr.position.y=1.4;g.add(tr);const cr=new THREE.Mesh(new THREE.IcosahedronGeometry(2.2*s,1),new THREE.MeshStandardMaterial({color:0x315f3d}));
+ cr.position.y=3.2;g.add(cr);g.position.set(x,0,z);return g
+}
+
+let osm,scene,camera,renderer,player,roadMesh,routePts=[],traffic=[],routeIndex=0,progress=0,speed=0,targetSpeed=0,lane=0,targetLane=0,damage=100,dist=0,points=5000,boost=100,paused=false,running=false,last=performance.now(),shake=0,collisions=0;
+try{
+ osm=await getOSM();
+}catch(e){
+ $("loading").innerHTML="OSM ROAD DATA COULD NOT BE LOADED.<br><small style='color:#9aa'>Refresh the GitHub Pages page and try again.</small>";
+ return;
+}
+
+const roads=osm.elements.filter(e=>e.type==="way"&&e.tags?.highway&&e.geometry?.length>1);
+const buildings=osm.elements.filter(e=>e.type==="way"&&e.tags?.building&&e.geometry?.length>2);
+const candidates=roads.filter(e=>lineLen(e.geometry)>250).sort((a,b)=>lineLen(b.geometry)-lineLen(a.geometry));
+let main=candidates.find(e=>/Bengaluru|Honnavara|Bangalore|B\.H\.|Mahatma Gandhi|MG Road/i.test(e.tags?.name||""))||candidates[0];
+if(!main)throw new Error("No suitable road");
+routePts=simplify(main.geometry);
+$("rn").textContent=main.tags?.name||"Tumakuru mapped road";
+$("rs").textContent=(main.tags?.highway||"road")+" • "+(lineLen(main.geometry)/1000).toFixed(2)+" km mapped";
+$("st").textContent="OSM world loaded • "+roads.length+" roads";
+
+scene=new THREE.Scene();scene.background=new THREE.Color(0xb7c7c8);scene.fog=new THREE.Fog(0xb7c7c8,90,430);
+camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,700);
+renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=false;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xdcecff,0x53604e,2.2));const sun=new THREE.DirectionalLight(0xffffff,2.4);sun.position.set(-80,130,80);scene.add(sun);
+
+scene.add(new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshStandardMaterial({color:0x66785c,roughness:1}))).rotation.x=-Math.PI/2;
+
+const roadWidth=main.tags?.highway==="primary"?12:main.tags?.highway==="secondary"?10:8;
+roadMesh=makeRoad(routePts,roadWidth,0x41474a);scene.add(roadMesh);
+// lane markings following actual centerline
+for(let l=-1;l<=1;l+=2){const pts=routePts.map(p=>({lat:p.lat,lon:p.lon}));let line=makeLine(pts,1,0xf0eee0);scene.add(line)}
+// OSM buildings in a limited radius around route
+let routeXY=routePts.map(project);
+for(const b of buildings.slice(0,1400)){
+ const ps=b.geometry.map(project);let cx=ps.reduce((a,p)=>a+p.x,0)/ps.length,cz=ps.reduce((a,p)=>a+p.z,0)/ps.length;
+ if(Math.abs(cx)>260||Math.abs(cz)>260)continue;
+ let minx=Infinity,maxx=-Infinity,minz=Infinity,maxz=-Infinity;ps.forEach(p=>{minx=Math.min(minx,p.x);maxx=Math.max(maxx,p.x);minz=Math.min(minz,p.z);maxz=Math.max(maxz,p.z)});
+ const w=Math.max(3,Math.min(28,maxx-minx)),d=Math.max(3,Math.min(28,maxz-minz)),h=4+(b.tags?.building==="commercial"?7:0)+Math.random()*8;
+ scene.add(box(cx,cz,w,d,h, b.tags?.building==="commercial"?0x7b746b:0x8d928c));
+}
+// roadside trees/poles to make mapped city feel alive
+for(let i=0;i<100;i++){
+ const p=routePts[Math.floor(i/100*routePts.length)],q=project(p);
+ const side=i%2?-1:1;scene.add(tree(q.x+side*(roadWidth/2+6+(i%3)*2),q.z,0.7+(i%4)*.1));
+}
+// actual route road ribbon line for minimap-like debug not visible as overlay
+const start=project(routePts[0]);player=new THREE.Group();
+const body=new THREE.Mesh(new THREE.BoxGeometry(1.35,.65,2.6),new THREE.MeshStandardMaterial({color:0x0c7fb5,roughness:.65}));
+body.position.y=.65;player.add(body);const seat=new THREE.Mesh(new THREE.BoxGeometry(.7,.25,.9),new THREE.MeshStandardMaterial({color:0x101820}));seat.position.y=1.0;seat.position.z=.25;player.add(seat);
+const wheelM=new THREE.MeshStandardMaterial({color:0x151515});
+for(const z of [-.85,.85]){const wh=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.18,12),wheelM);wh.rotation.z=Math.PI/2;wh.position.set(0,.38,z);player.add(wh)}
+scene.add(player);
+
+function pointAt(t){
+ const n=routePts.length-1, f=Math.max(0,Math.min(n-1,t)),i=Math.floor(f),a=routePts[i],b=routePts[i+1],q=f-i;
+ const A=project(a),B=project(b);return {x:A.x+(B.x-A.x)*q,z:A.z+(B.z-A.z)*q,dx:B.x-A.x,dz:B.z-A.z}
+}
+function spawnTraffic(i,l){
+ const p=pointAt(Math.min(routePts.length-2,i));const o=box(p.x+l*2.6,p.z,1.35,2.6,.9,[0xb73c31,0xd2a72e,0x2d7090,0x1f8a55,0xd8d8d2][i%5]);
+ o.userData={t:i,lane:l,s:.35+Math.random()*.3,hit:false};scene.add(o);traffic.push(o)
+}
+for(let i=10;i<routePts.length-2;i+=Math.max(2,Math.floor(routePts.length/18)))spawnTraffic(i,[-1,0,1][i%3]);
+
+function crash(t){
+ if(t.userData.hit)return;t.userData.hit=true;collisions++;damage-=18;speed*=.3;points=Math.max(0,points-150);shake=.35;$("crash").style.display="block";setTimeout(()=>$("crash").style.display="none",130);navigator.vibrate?.([35,35,70]);toast("CONTACT  −150");
+}
+function toast(t){$("toast").textContent=t;$("toast").style.display="block";clearTimeout(window.__tt);window.__tt=setTimeout(()=>$("toast").style.display="none",900)}
+function update(dt){
+ if(!running||paused)return;
+ targetSpeed=boost>0&&boostState?32:throttleState?22:0;
+ if(brakeState)targetSpeed=0;
+ speed+=(targetSpeed-speed)*(1-Math.exp(-4*dt));speed=Math.max(0,Math.min(32,speed));
+ progress+=speed*dt/3.2;dist+=speed*dt;
+ targetLane=Math.max(-1,Math.min(1,targetLane));lane+=(targetLane-lane)*Math.min(1,dt*7);
+ const p=pointAt(progress);const L=Math.hypot(p.dx,p.dz)||1;const nx=-p.dz/L,nz=p.dx/L;
+ player.position.set(p.x+nx*lane*2.6,.02,p.z+nz*lane*2.6);player.rotation.y=Math.atan2(p.dx,p.dz)+Math.PI;
+ if(boostState&&boost>0)boost-=30*dt;
+ for(const t of traffic){
+  t.userData.t-=t.userData.s*dt;
+  if(t.userData.t<0){t.userData.t=routePts.length-2;t.userData.hit=false}
+  const q=pointAt(t.userData.t),ll=t.userData.lane;const A=Math.hypot(q.dx,q.dz)||1,nx2=-q.dz/A,nz2=q.dx/A;
+  t.position.set(q.x+nx2*ll*2.6,.45,q.z+nz2*ll*2.6);t.rotation.y=Math.atan2(q.dx,q.dz)+Math.PI;
+  if(t.userData.t<progress+6&&t.userData.t>progress-2&&Math.abs(ll-lane)<.55)crash(t);
+ }
+ if(progress>=routePts.length-2){running=false;toast("ROUTE COMPLETE  +5000");points+=5000}
+ $("spd").textContent=Math.round(speed*3.6);$("dst").textContent=(dist/1000).toFixed(2);$("dmg").textContent=Math.max(0,Math.round(damage));
+ $("rn").textContent=main.tags?.name||"Tumakuru mapped road";
+ $("st").textContent=`${Math.round(progress/(routePts.length-2)*100)}% route • ${collisions} contacts`;
+ const cam=p;const back=12;const fwd=pointAt(Math.min(routePts.length-2,progress+2));const dx=fwd.x-cam.x,dz=fwd.z-cam.z,L2=Math.hypot(dx,dz)||1;
+ const desired=new THREE.Vector3(cam.x-dx/L2*back+nx*lane*2.6,6.2,cam.z-dz/L2*back+nz*lane*2.6);
+ camera.position.lerp(desired,1-Math.exp(-5*dt));camera.lookAt(new THREE.Vector3(cam.x,1,cam.z));
+}
+let throttleState=false,brakeState=false,boostState=false;
+function bind(id,down,up=()=>{}){const e=$(id);e.addEventListener("pointerdown",ev=>{ev.preventDefault();down();e.setPointerCapture?.(ev.pointerId)},{passive:false});["pointerup","pointercancel","pointerleave"].forEach(v=>e.addEventListener(v,ev=>{ev.preventDefault();up()},{passive:false}))}
+bind("brake",()=>brakeState=true,()=>brakeState=false);bind("boost",()=>boostState=true,()=>boostState=false);
+bind("l",()=>targetLane--);bind("r",()=>targetLane++);bind("horn",()=>navigator.vibrate?.(55));bind("swing",()=>{points+=25;toast("SWING +25")});
+$("pause").addEventListener("pointerup",()=>{paused=!paused;$("pause").textContent=paused?"▶":"Ⅱ"});
+$("go").addEventListener("click",()=>{$("start").style.display="none";running=true;last=performance.now()});
+$("go").addEventListener("touchend",e=>{e.preventDefault();$("start").style.display="none";running=true;last=performance.now()},{passive:false});
+addEventListener("keydown",e=>{if(e.key==="ArrowUp")throttleState=true;if(e.key==="ArrowDown")brakeState=true;if(e.key==="ArrowLeft")targetLane--;if(e.key==="ArrowRight")targetLane++});
+addEventListener("keyup",e=>{if(e.key==="ArrowUp")throttleState=false;if(e.key==="ArrowDown")brakeState=false});
+addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+$("loading").style.display="none";
+function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;update(dt);renderer.render(scene,camera);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
 })();
 </script>
 </body>
