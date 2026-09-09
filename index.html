@@ -55,6 +55,23 @@ button{border:0;border-radius:14px;padding:14px 20px;font-weight:900;font-size:1
 <script>
 (() => {
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const loading=document.getElementById('loading');
+const menu=document.getElementById('menu');
+const finish=document.getElementById('finish');
+const start=document.getElementById('start');
+const again=document.getElementById('again');
+const pause=document.getElementById('pause');
+const mission=document.getElementById('mission');
+const toast=document.getElementById('toast');
+const spd=document.getElementById('spd');
+const dist=document.getElementById('dist');
+const score=document.getElementById('score');
+const hp=document.getElementById('hp');
+const results=document.getElementById('results');
+window.addEventListener('error', (e)=>{
+  loading.style.display='flex';
+  loading.innerHTML='<div class="panel"><h2>GAME START ERROR</h2><p>'+String(e.message||'Unknown error')+'</p><p class="small">Refresh the page after updating index.html.</p></div>';
+});
 let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
 function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
 addEventListener('resize',resize);resize();
@@ -156,7 +173,7 @@ function update(dt){
    mission.textContent=player.ri>=route.length-1?'REACH THE FINISH':`CHECKPOINT ${player.ri+1} • ${names[Math.min(player.ri,names.length-1)]}`;
    showToast('CHECKPOINT +500');
  }
- if(player.ri>=route.length-1 && Math.hypot(player.x-route.at(-1)[0],player.y-route.at(-1)[1])<55){finishGame();return}
+ if(player.ri>=route.length-1 && Math.hypot(player.x-route[route.length-1][0],player.y-route[route.length-1][1])<55){finishGame();return}
  if(player.hp<=0){showToast('BIKE DISABLED');finishGame()}
  spd.textContent=Math.round(player.v);dist.textContent=(player.dist/1000).toFixed(1);score.textContent=Math.round(player.score);hp.textContent=Math.max(0,Math.round(player.hp));
 }
@@ -208,13 +225,16 @@ function draw(){
  for(const a of traffic)drawVehicle(a);
  drawVehicle(player,true);
  // finish marker
- let f=project(route.at(-1)[0],route.at(-1)[1]);ctx.fillStyle='#c9ff28';ctx.font='900 12px system-ui';ctx.fillText('FINISH',f[0]-20,f[1]-25);
+ let f=project(route[route.length-1][0],route[route.length-1][1]);ctx.fillStyle='#c9ff28';ctx.font='900 12px system-ui';ctx.fillText('FINISH',f[0]-20,f[1]-25);
  minimap();
  if(paused){ctx.fillStyle='#07101688';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='900 28px system-ui';ctx.textAlign='center';ctx.fillText('PAUSED',W/2,H/2);ctx.textAlign='left')}
 }
 let last=performance.now();
 function loop(now){let dt=Math.min(.035,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
-loading.style.display='none';menu.style.display='flex';reset();requestAnimationFrame(loop);
+reset();
+loading.style.display='none';
+menu.style.display='flex';
+requestAnimationFrame(loop);
 })();
 </script>
 </body>
